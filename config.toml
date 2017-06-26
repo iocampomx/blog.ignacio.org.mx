@@ -1,0 +1,8 @@
+baseURL = "http://blog.nafiux.com/"
+languageCode = "en-us"
+title = "Nafiux Blog"
+theme = "hugo-theme-minos"
+disqusShortname = "blognafiux"
+
+[params]
+    smartToc = true
