@@ -63,8 +63,6 @@ public class WebApplicationExceptionMapperProvider implements ExceptionMapper<We
 </code>
 </pre>
 
-(Apache CXF has an [WebApplicationExceptionMapper](https://github.com/apache/cxf/blob/master/rt/frontend/jaxrs/src/main/java/org/apache/cxf/jaxrs/impl/WebApplicationExceptionMapper.java) already defined and used by default, but it doesn't include the exception message in the response to the user/developer).
-
 In the previous example, **WebApplicationExceptionMapperProvider** expect a `pipe (|)` as a separator in the exception message to split it in two kind of messages, the first part is a high level error message final user oriented, the second part is a more detailed error message developer oriented (upon each specific exception raised, if no pipe is provided, **developerMessage** isn't included in the response).
 
 <pre>
@@ -77,7 +75,7 @@ throw new ForbiddenException("Invalid username or password|Validate that you're 
 
 If you need to define your custom exceptions that doesn't extend from **WebApplicationException**, you should create also your own [ExceptionMapper](https://dennis-xlc.gitbooks.io/restful-java-with-jax-rs-2-0-2rd-edition/en/part1/chapter7/exception_handling.html#exception-mapping) for that exception/s, so that you can provide the same level of detail in the response to the user.
 
-Without **WebApplicationExceptionMapperProvider**:
+Without **WebApplicationExceptionMapperProvider** (Apache CXF has an [WebApplicationExceptionMapper](https://github.com/apache/cxf/blob/master/rt/frontend/jaxrs/src/main/java/org/apache/cxf/jaxrs/impl/WebApplicationExceptionMapper.java) already defined and used by default, but it doesn't include the exception message in the response to the user/developer):
 
 <pre>
 <code class="language-bash">
@@ -90,7 +88,7 @@ Server: Jetty(9.4.6.v20170531)
 </code>
 </pre>
 
-With **WebApplicationExceptionMapperProvider**:
+With **WebApplicationExceptionMapperProvider** (the example class described above):
 
 <pre>
 <code class="language-bash">
@@ -115,7 +113,87 @@ We must ensure that all exceptions are being "converted" to a customer facing ex
   - Catch those exceptions at some point in the api implementation layer and convert them in a **WebApplicationException**.
   - Register a ExceptionMapper for that exception, so that you can provide the same level of detail in the response to the user.
 
-You should have in mind that there could be some hidden **RuntimeExceptions** (unchecked) that you won't see until they appears, specially when you're using third part libraries.
+You should have in mind that there could be some hidden **RuntimeExceptions** (unchecked) that you won't see until they appears, specially when you're using third part libraries, e.g.:
+
+    @POST
+    @Path("/login")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response postLogin(LoginInput login) {
+      throw new DynamoDBMappingException("This is an example");
+    }
+
+**DynamoDBMappingException** extends from **RuntimeException** (unchecked), if you invoke the method, you will receive:
+
+<pre style="max-height: 400px">
+ignacio.ocampo@MXTI1-4WQG8WQ ~ $ curl -i -X POST -H "Content-Type: application/json" http://localhost:8080/api/uaa/svc/public/v1/auth/login -d '{"username": "invalid@user.com", "password": "changeme"}' && echo ""
+HTTP/1.1 500 Server Error
+Cache-Control: must-revalidate,no-cache,no-store
+Content-Type: text/html;charset=iso-8859-1
+Content-Length: 4418
+Connection: close
+Server: Jetty(9.4.6.v20170531)
+
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html;charset=utf-8"/&gt;
+&lt;title>Error 500 Server Error&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;&lt;h2&gt;HTTP ERROR 500&lt;/h2&gt;
+&lt;p&gt;Problem accessing /api/uaa/svc/public/v1/auth/login. Reason:
+&lt;pre&gt;    Server Error&lt;/pre&gt;&lt;/p&gt;&lt;h3&gt;Caused by:&lt;/h3&gt;&lt;pre&gt;com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMappingException: This is an example
+  at com.nafiux.ncp.uaa.application.UAAAplicationImpl.postLogin(UAAAplicationImpl.java:42)
+  at com.nafiux.ncp.uaa.api.v1.auth.AuthenticationApiImpl.postLogin(AuthenticationApiImpl.java:15)
+  at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+  at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  at java.lang.reflect.Method.invoke(Method.java:497)
+  at org.apache.cxf.service.invoker.AbstractInvoker.performInvocation(AbstractInvoker.java:180)
+  at org.apache.cxf.service.invoker.AbstractInvoker.invoke(AbstractInvoker.java:96)
+  at org.apache.cxf.jaxrs.JAXRSInvoker.invoke(JAXRSInvoker.java:189)
+  at org.apache.cxf.jaxrs.JAXRSInvoker.invoke(JAXRSInvoker.java:99)
+  at org.apache.cxf.interceptor.ServiceInvokerInterceptor$1.run(ServiceInvokerInterceptor.java:59)
+  at org.apache.cxf.interceptor.ServiceInvokerInterceptor.handleMessage(ServiceInvokerInterceptor.java:96)
+  at org.apache.cxf.phase.PhaseInterceptorChain.doIntercept(PhaseInterceptorChain.java:308)
+  at org.apache.cxf.transport.ChainInitiationObserver.onMessage(ChainInitiationObserver.java:121)
+  at org.apache.cxf.transport.http.AbstractHTTPDestination.invoke(AbstractHTTPDestination.java:262)
+  at org.apache.cxf.transport.servlet.ServletController.invokeDestination(ServletController.java:234)
+  at org.apache.cxf.transport.servlet.ServletController.invoke(ServletController.java:208)
+  at org.apache.cxf.transport.servlet.ServletController.invoke(ServletController.java:160)
+  at org.apache.cxf.transport.servlet.CXFNonSpringServlet.invoke(CXFNonSpringServlet.java:180)
+  at org.apache.cxf.transport.servlet.AbstractHTTPServlet.handleRequest(AbstractHTTPServlet.java:299)
+  at org.apache.cxf.transport.servlet.AbstractHTTPServlet.doPost(AbstractHTTPServlet.java:218)
+  at javax.servlet.http.HttpServlet.service(HttpServlet.java:707)
+  at org.apache.cxf.transport.servlet.AbstractHTTPServlet.service(AbstractHTTPServlet.java:274)
+  at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:841)
+  at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:535)
+  at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:188)
+  at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1253)
+  at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:168)
+  at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:473)
+  at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:166)
+  at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1155)
+  at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+  at org.eclipse.jetty.server.handler.HandlerCollection.handle(HandlerCollection.java:126)
+  at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:132)
+  at org.eclipse.jetty.server.Server.handle(Server.java:564)
+  at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:317)
+  at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:251)
+  at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:279)
+  at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:110)
+  at org.eclipse.jetty.io.ChannelEndPoint$2.run(ChannelEndPoint.java:124)
+  at org.eclipse.jetty.util.thread.Invocable.invokePreferred(Invocable.java:128)
+  at org.eclipse.jetty.util.thread.Invocable$InvocableExecutor.invoke(Invocable.java:222)
+  at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:294)
+  at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.produce(EatWhatYouKill.java:126)
+  at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:673)
+  at org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:591)
+  at java.lang.Thread.run(Thread.java:745)
+&lt;/pre&gt;
+&lt;hr&gt;&lt;a href="http://eclipse.org/jetty"&gt;Powered by Jetty:// 9.4.6.v20170531&lt;/a&gt;&lt;hr/&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
 
 Here some examples about errors formats from some well-known companies:
 
