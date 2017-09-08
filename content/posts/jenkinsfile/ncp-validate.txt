@@ -1,0 +1,179 @@
+#!/bin/bash
+
+# Parameters
+NCPVALIDATE="1.0.3"
+GIT="git version 2."
+JAVA="1.8.0"
+MAVEN="Apache Maven 3.5.0"
+DOCKER="17.06.1-ce"
+KUBERNETES="1.7.2"
+AWSCLI="1.11.142"
+NEXUSREPO="http://nexus.foo.net/repository/maven-public/"
+NODE="v6.11.1"
+#VUECLI="2.8.2"
+declare -a clusters=("dev.kcluster.foo.bar")
+
+# Utils
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
+echo "* ncp-validate ($NCPVALIDATE) - A tool for validating expected versions for NCP"
+echo "================================================================================"
+echo "Expected versions:"
+echo "GIT        : $GIT"
+echo "JAVA       : $JAVA"
+echo "MAVEN      : $MAVEN"
+echo "DOCKER     : $DOCKER"
+echo "KUBERNETES : $KUBERNETES"
+echo "AWSCLI     : $AWSCLI"
+echo "NEXUSREPO  : $NEXUSREPO"
+echo "NODE       : $NODE"
+#echo "VUECLI     : $VUECLI"
+
+echo "================================================================================"
+echo "Validating Git version..."
+command -v git > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere git but it's not installed."; exit 1; }
+GITVERSION=`git --version 2>&1|grep "$GIT"`
+if [ "$GITVERSION" == "" ]; then
+	echo "${red}[ER]:${reset} Unexpected git version, found: `git --version 2>&1`, expected: $GIT"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} Correct git version, found: `git --version 2>&1`, expected: $GIT"
+fi
+
+echo "================================================================================"
+echo "Checking updates..."
+GITOUTPUT=`git -C ~/.ncp-validate pull 2>&1`
+if [ "$GITOUTPUT" != "Already up-to-date." ]; then
+	echo "ncp-validate updated!, restarting..."
+	ncp-validate
+	exit 0;
+else
+	echo $GITOUTPUT
+fi
+
+echo "================================================================================"
+echo "Validating JDK version..."
+command -v javac > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere javac but it's not installed."; exit 1; }
+JAVAVERSION=`javac -version 2>&1|grep $JAVA`
+if [ "$JAVAVERSION" == "" ]; then
+	echo "${red}[ER]:${reset} Unexpected java version, found: `javac -version 2>&1`, expected: $JAVA"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} Correct java version, found: `javac -version 2>&1`, expected: $JAVA"
+fi
+
+echo "================================================================================"
+echo "Validating kubernetes version..."
+command -v kubectl > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere kubectl but it's not installed."; exit 1; }
+KUBECTVERSION=`kubectl version`
+KUBECLIENTVERSION=`echo "$KUBECTVERSION" | grep "Client Version" | awk -F'GitVersion:"v' '{print $2}' | awk -F'"' '{print $1}'`
+KUBESERVERVERSION=`echo "$KUBECTVERSION" | grep "Server Version" | awk -F'GitVersion:"v' '{print $2}' | awk -F'"' '{print $1}'`
+# Client
+if [ "$KUBECLIENTVERSION" != "$KUBERNETES" ]; then
+	echo "${red}[ER]:${reset} kubectl Client version isn't correct, expected: $KUBERNETES, current: $KUBECLIENTVERSION (more info, execute: kubectl version)"
+	echo "How to install a specific version: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-binary-via-curl"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} kubectl Client version isn't correct, expected: $KUBERNETES, current: $KUBECLIENTVERSION (more info, execute: kubectl version)"
+fi
+# Server
+if [ "$KUBESERVERVERSION" != "$KUBERNETES" ]; then
+	echo "${red}[ER]:${reset} kubectl Server version isn't correct, expected: $KUBERNETES, current: $KUBESERVERVERSION (more info, execute: kubectl version)"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} kubectl Server version is correct, expected: $KUBERNETES, current: $KUBESERVERVERSION (more info, execute: kubectl version)"
+fi
+
+echo "================================================================================"
+echo "Validating kubernetes configuration..."
+if [ ! -f ~/.kube/config ]; then
+	echo "${red}[ER]:${reset} ~/.kube/config isn't present, it's required to interact with Kubernetes Cluster"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} ~/.kube/config is present, it's required to interact with Kubernetes Cluster"
+	for i in "${clusters[@]}"
+	do
+		kubectl cluster-info --cluster=$i
+	done
+fi
+
+echo "================================================================================"
+echo "Validating aws-cli version..."
+command -v aws > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere aws but it's not installed."; exit 1; }
+AWSCLIVERSION=`aws --version 2>&1 |grep "$AWSCLI"`
+if [ "$AWSCLIVERSION" == "" ]; then
+	echo "${red}[ER]:${reset} aws version isn't correct, expected: $AWSCLI, current: `aws --version 2>&1`"
+	echo "More info: https://github.com/aws/aws-cli/"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} aws version is correct, expected: $AWSCLI, current: `aws --version 2>&1`"
+fi
+
+
+echo "================================================================================"
+echo "Validating maven configuration..."
+command -v mvn > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere mvn but it's not installed."; exit 1; }
+MVNVERSION=`mvn --version|grep "$MAVEN"`
+if [ "$MVNVERSION" == "" ]; then
+	echo "${red}[ER]:${reset} mvn version isn't correct, expected: $MAVEN, current: $MVNVERSION"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} mvn version is correct, expected: $MAVEN, current: $MVNVERSION"
+fi
+if [ ! -f ~/.m2/settings.xml ]; then
+	echo "${red}[ER]:${reset} ~/.m2/settings.xml isn't present, it's required to authenticate nexus.foo.net to push artifacts"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} ~/.m2/settings.xml is present, it's required to authenticate nexus.foo.net to push artifacts"
+	# Checking repository
+	REPOEXISTS=`mvn help:evaluate -Dexpression=project.repositories[0].url | grep -v '\[INFO\]'`
+	if [ "$REPOEXISTS" != "$NEXUSREPO" ]; then
+		echo "${red}[ER]:${reset} Expected repo: $NEXUSREPO"
+		echo "$REPOEXISTS (more info, execute: mvn help:evaluate -Dexpression=project.repositories[0].url)"
+		exit 1;
+	else
+		echo "${green}[OK]:${reset} Nexus repo found: $REPOEXISTS"
+	fi
+fi
+if [ ! -f ~/.m2/settings-security.xml ]; then
+	echo "${red}[ER]:${reset} ~/.m2/settings-security.xml isn't present, it's required to decrypt the passwords defined on ~/.m2/settings.xml"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} ~/.m2/settings-security.xml is present, it's required to decrypt the passwords defined on ~/.m2/settings.xml"
+fi
+
+echo "================================================================================"
+echo "Validating docker CE version..."
+command -v docker > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere docker but it's not installed."; exit 1; }
+DOCKERVERSION=`docker --version|grep $DOCKER`
+if [ "$DOCKERVERSION" == "" ]; then
+	echo "${red}[ER]:${reset} docker version isn't correct, expected: $DOCKER, current: `docker --version`"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} docker version is correct, expected: $DOCKER, current: `docker --version`"
+fi
+
+echo "================================================================================"
+echo "Validating node version..."
+command -v node > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere node but it's not installed."; exit 1; }
+NODEVERSION=`node --version|grep $NODE`
+if [ "$NODEVERSION" == "" ]; then
+	echo "${red}[ER]:${reset} node version isn't correct, expected: $NODE, current: `node --version`"
+	exit 1;
+else
+	echo "${green}[OK]:${reset} node version is correct, expected: $NODE, current: `node --version`"
+fi
+
+#echo "================================================================================"
+#echo "Validating vue-cli version..."
+#command -v vue > /dev/null 2>&1 || { echo "${red}[ER]:${reset} I requiere vue but it's not installed."; exit 1; }
+#VUECLIVERSION=`vue --version|grep $VUECLI`
+#if [ "$VUECLIVERSION" == "" ]; then
+#	echo "${red}[ER]:${reset} vue version isn't correct, expected: $VUECLI, current: `vue --version`"
+#	exit 1;
+#else
+#	echo "${green}[OK]:${reset} vue version is correct, expected: $VUECLI, current: `vue --version`"
+#fi
+

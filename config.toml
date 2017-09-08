@@ -6,3 +6,10 @@ disqusShortname = "blognafiux"
 
 [params]
     smartToc = true
+
+[[menu.main]]
+    name = "About"
+    pre = "<i class='fa fa-heart'></i>"
+    weight = -110
+    identifier = "about"
+    url = "/profile"

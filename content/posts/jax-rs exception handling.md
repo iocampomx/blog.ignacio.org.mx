@@ -1,7 +1,7 @@
 +++
 title = "JAX-RS Exception Handling"
 tags = ["microservices", "java", "jax-rs", "exceptions"]
-date = "2017-08-06"
+date = "2017-08-07"
 +++
 
 # Exception handling
@@ -32,7 +32,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class WebApplicationExceptionMapperProvider implements ExceptionMapper<WebApplicationException> {
+public class WebApplicationExceptionMapperProvider implements ExceptionMapper&lt;WebApplicationException&gt; {
 
   class ErrorMessage {
     int status;
@@ -64,6 +64,8 @@ public class WebApplicationExceptionMapperProvider implements ExceptionMapper<We
 </pre>
 
 In the previous example, **WebApplicationExceptionMapperProvider** expect a `pipe (|)` as a separator in the exception message to split it in two kind of messages, the first part is a high level error message final user oriented, the second part is a more detailed error message developer oriented (upon each specific exception raised, if no pipe is provided, **developerMessage** isn't included in the response).
+
+Example:
 
 <pre>
 <code class="language-java">
@@ -195,15 +197,71 @@ Server: Jetty(9.4.6.v20170531)
 &lt;/html&gt;
 </pre>
 
+You could define a **GenericExceptionMapperProvider implements ExceptionMapper&lt;Throwable&gt;** such as:
+
+<pre>
+<code class="language-java">
+package com.nafiux.ncp.base.exception;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+
+@Provider
+public class GenericExceptionMapperProvider implements ExceptionMapper&lt;Throwable&gt; {
+
+  class ErrorMessage {
+    int status;
+    String message;
+    String developerMessage;
+
+    public ErrorMessage(int status, String message) {
+      this.status = status;
+      String[] messages = message.split("\\|");
+      this.message = messages[0];
+      if(messages.length > 1) {
+        this.developerMessage = messages[1];
+      }
+    }
+
+    public int getStatus() { return this.status; }
+    public String getMessage() { return this.message; }
+    public String getDeveloperMessage() { return this.developerMessage; }
+  }
+
+  public Response toResponse(Throwable ex) {
+
+    ErrorMessage errorMessage = new ErrorMessage(500, "An internal error has occurred|Perhaps here the REQUESTID or some reference that could help you to track the problem...");
+    return Response.serverError().entity(errorMessage).build();
+
+  }
+
+}
+</code>
+</pre>
+
+As you can see now, the error is masqueraded:
+
+<pre>
+<code class="language-bash">
+ignacio.ocampo@MXTI1-4WQG8WQ ~ $ curl -i -X POST -H "Content-Type: application/json" http://localhost:8080/api/uaa/svc/public/v1/auth/login -d '{"username": "invalid@user.com", "password": "changeme"}' && echo ""
+HTTP/1.1 500 Server Error
+Date: Mon, 07 Aug 2017 17:00:33 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Server: Jetty(9.4.6.v20170531)
+
+{"status":500,"message":"An internal error has occurred","developerMessage":"Perhaps here the REQUESTID or some reference that could help you to track the problem..."}
+</code>
+</pre>
+
+> JAX-RS supports exception inheritance as well. When an exception is thrown, JAX-RS will first try to find an **ExceptionMapper** for that exception’s type. If it cannot find one, it will look for a mapper that can handle the exception’s superclass. It will continue this process until there are no more superclasses to match against ([read more](https://dennis-xlc.gitbooks.io/restful-java-with-jax-rs-2-0-2rd-edition/en/part1/chapter7/exception_handling.html#exception-mapping)).
+
 Here some examples about errors formats from some well-known companies:
 
   * Amazon EC2: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
   * Twitter: https://dev.twitter.com/overview/api/response-codes
   * IBM QRadar on Cloud: https://www.ibm.com/support/knowledgecenter/en/SSKMKU/com.ibm.qradar.doc/c_rest_api_errors.html
-
-A final note from [Oracle](http://docs.oracle.com/javase/tutorial/essential/exceptions/runtime.html):
-
-> If a client can reasonably be expected to recover from an exception, make it a **checked exception**. If a client cannot do anything to recover from the exception, make it an **unchecked exception**.
 
 Reference:
 
