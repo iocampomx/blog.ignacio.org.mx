@@ -5,15 +5,15 @@ date = "2017-09-08"
 draft = "False"
 +++
 
-In this example I'm going to show how to define a [**Jenkinsfile**](https://jenkins.io/doc/book/pipeline/jenkinsfile/) using the [Scripted format](https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline). This example only consider the "dev" environment, I have plans to update this post in the future with other environments.
+In this example I'm going to show how to define a [**Jenkinsfile**](https://jenkins.io/doc/book/pipeline/jenkinsfile/) using the [Scripted format](https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline) (a domain-specific language based on Groovy). This example only consider the "dev" environment, I have plans to update this post in the future with other environments.
 
-If you want to understand more about what is Continuous Integration is and how it does work, visit [this article from Martin Fowler](https://martinfowler.com/articles/continuousIntegration.html).
+If you want to understand more about what Continuous Integration is and how it does work, visit [this article from Martin Fowler](https://martinfowler.com/articles/continuousIntegration.html).
 
 Before start, I will define the context in which I'm using this Jenkinsfile to give you more visibility about the utiliness of it:
 
-This **Jenkinsfile** is part of a Maven Archetype that I’m using to develop the microservices, this way I ensure consistency across projects, thats why you will see some ${variables} that are being replaced at the moment of the creation of the project based on the artifact.
+This **Jenkinsfile** is part of a Maven Archetype that I’m using to develop microservices, this way I ensure consistency across projects, thats why you will see some ${variables} that are being replaced at the moment of the creation of the project based on the artifact.
 
->> Scripted Pipeline is a domain-specific language based on Groovy, most Groovy syntax can be used in Scripted Pipeline without modification [(reference)](https://jenkins.io/doc/book/pipeline/jenkinsfile/#advanced-syntax-for-pipeline).
+For a complete reference of Jenkins steps, visit this page: https://jenkins.io/doc/pipeline/steps/
 
 <style type="text/css">
 	#nacho .vglnk {
@@ -114,9 +114,9 @@ Any small change in any version will cause a non-zero exit return code, which wi
 
 The script is available in the global path, so that I can call it wherever I'm, it is versionated and it does have an auto update feature each time it being called (git pull & restart if changes) to keep it up-to-date all time.
 
-![ncp-validate](/posts/jenkinsfile/ncp-validate.png)
+[![ncp-validate](/posts/jenkinsfile/ncp-validate.png)](/posts/jenkinsfile/ncp-validate.png)
 
-You can download a copy of the script [here](/posts/jenkinsfile/ncp-validate.txt).
+You can download a copy of the script [here](/posts/jenkinsfile/ncp-validate.txt), it has been tested in Linux & Mac.
 
 ## 4, 5. Compile & Tests
 

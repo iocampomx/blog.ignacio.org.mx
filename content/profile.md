@@ -1,6 +1,6 @@
 +++
 title = "Ignacio Ocampo"
-date = "2017-08-06"
+date = "2018-04-21"
 showOnFrontpage = "false"
 discus = "false"
 +++
@@ -14,7 +14,7 @@ discus = "false"
 }
 </style>
 
-Site Leader/Software Engineering Manager at Thermo Fisher Scientific @ Tijuana, Baja California. México.
+Software Engineering Manager at Thermo Fisher Scientific @ Tijuana, Baja California. México.
 
 https://github.com/nafiux
 
