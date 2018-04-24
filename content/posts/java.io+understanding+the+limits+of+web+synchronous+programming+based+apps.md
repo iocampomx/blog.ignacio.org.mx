@@ -8,15 +8,15 @@ date = "2018-04-23"
 
 I want to have a high performance API Gateway that scales well.
 
-I heard about [**Zuul 2**](https://github.com/Netflix/zuul) which is a non-blocking gateway on top of [**Netty**](http://netty.io/), *an asynchronous event-driven network application framework* based on Java NIO.
+I heard about [**Zuul 2**](https://github.com/Netflix/zuul) (non-blocking gateway) on top of [**Netty**](http://netty.io/), *an asynchronous event-driven network application framework* based on Java NIO.
 
 There are great articles about [**Zuul 1**](https://medium.com/netflix-techblog/announcing-zuul-edge-service-in-the-cloud-ab3af5be08ee) & [**Zuul 2**](https://medium.com/netflix-techblog/zuul-2-the-netflix-journey-to-asynchronous-non-blocking-systems-45947377fb5c) out there, I found this [**video**](https://www.youtube.com/watch?v=2oXqbLhMS_A) very helpful to understand Zuul's evolution and Netflix's journey on this.
 
-I don't have solid knowledge about **java.nio API** yet, and, since **Zuul 2** is an evolution of **Zuul 1**, which was based on synchronous (blocking) programming, before to learn **java.nio API** I need to understand the limitations of why the synchronous (blocking) applications does not scale well, this article is about that.
+I don't have solid knowledge about **java.nio API** yet, and, since **Zuul 2** is an evolution of **Zuul 1**, which was based on synchronous (blocking) programming, before learn **java.nio API** I need to understand the limitations of why the synchronous (blocking) applications does not scale well, this article is about that.
 
 ## Must-read resources
 
-I found these resources very valuable as a foundation before get started:
+I found these resources very valuables as a foundation before get started:
 
  * [C10k problem](https://en.wikipedia.org/wiki/C10k_problem)
  * [JDK 8 - Lesson: Concurrency](https://docs.oracle.com/javase/tutorial/essential/concurrency/index.html)
@@ -326,10 +326,14 @@ Even though CrazyClient tried to create 3000 connections, the server only create
 
 ## Conclusion
 
-Using Thread Pools was safe for the server and the clients already connected, but wasn't optimal for new clients trying to connect. In fact, CrazyClient didn't anything after the connection were stablished, it just was waiting for long time and wasted resources of the server (this sounds like [DoS attack](https://en.wikipedia.org/wiki/Denial-of-service_attack)), that could be used by other very valuable clients.
+Using Thread Pools was safe for the server and the clients already connected, but wasn't optimal for new clients trying to connect. In fact, CrazyClient didn't anything after the connection were stablished, it just was waiting for long time wasting resources (threads) of the server (this sounds like [DoS attack](https://en.wikipedia.org/wiki/Denial-of-service_attack)), that could be used by other very valuable clients.
+
+Of course these examples were very basic, there are few techniques to helps the servers con prevent attacks.
 
 In order to support thousands of clients, one solution could be create a load balancer with several nodes serving connections, this is/was the most common strategy used by the industry based on thread-blocking solutions.
 
-What is next? Create asynchronous event-driven network applications, in Java world, **java.nio API** and Netty seems to be a good option.
+What is next? Create asynchronous event-driven network applications, in Java world, **java.nio API** and Netty seems to be a good option. Coming soon!
 
-Coming soon!
+## Related articles
+
+* [Tuning Tomcat For A High Throughput, Fail Fast System](https://medium.com/netflix-techblog/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f)
