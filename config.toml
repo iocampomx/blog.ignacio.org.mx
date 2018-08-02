@@ -1,15 +1,29 @@
-baseURL = "http://blog.nafiux.com/"
-languageCode = "en-us"
-title = "Nafiux Blog"
-theme = "hugo-theme-minos"
+baseurl = "http://blog.ignacio.org.mx"
+title = "Ignacio Ocampo"
+copyright = "Copyright &copy; 2018 - Ignacio Ocampo"
+theme = "kiera"
+canonifyurls = false # if true, hugo will prefix urls with baseurl
+
+paginate = 3 # for list of categories
+
+summaryLength = 30 # length of summary in the index
+enableEmoji = true # enables https://www.webpagefx.com/tools/emoji-cheat-sheet/
+pygmentsCodeFences = true # enable syntax highlighting
+
+menu = "main"
+meta = "false"
+
 disqusShortname = "blognafiux"
 
-[params]
-    smartToc = true
+[author]
+    name = "Ignacio Ocampo"
+    github = "iocampomx"
+    gitlab = ""
+    linkedin = "iocampomx"
+    #facebook = "nafiux"
+    twitter = "iocampomx"
+    instagram = "iocampomx"
+    stackoverflow = "770615"
 
-[[menu.main]]
-    name = "About"
-    pre = "<i class='fa fa-heart'></i>"
-    weight = -110
-    identifier = "about"
-    url = "/profile"
+[params]
+    tagline = "Software Engineering / Cloud / Microservices"

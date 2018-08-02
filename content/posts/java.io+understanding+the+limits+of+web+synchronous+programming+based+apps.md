@@ -328,8 +328,6 @@ Even though CrazyClient tried to create 3000 connections, the server only create
 
 Using Thread Pools was safe for the server and the clients already connected, but wasn't optimal for new clients trying to connect. In fact, CrazyClient didn't anything after the connection were stablished, it just was waiting for long time wasting resources (threads) of the server (this sounds like [DoS attack](https://en.wikipedia.org/wiki/Denial-of-service_attack)), that could be used by other very valuable clients.
 
-Of course these examples were very basic, there are few techniques to helps the servers con prevent attacks.
-
 In order to support thousands of clients, one solution could be create a load balancer with several nodes serving connections, this is/was the most common strategy used by the industry based on thread-blocking solutions.
 
 What is next? Create asynchronous event-driven network applications, in Java world, **java.nio API** and Netty seems to be a good option. Coming soon!
