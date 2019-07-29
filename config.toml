@@ -1,30 +1,44 @@
 baseurl = "http://blog.ignacio.org.mx"
 title = "Ignacio Ocampo"
-copyright = "Copyright &copy; 2018 - Ignacio Ocampo"
-theme = "kiera"
-canonifyurls = false # if true, hugo will prefix urls with baseurl
+copyright = "© 2017-2019 Ignacio Ocampo"
+languageCode = "en-us"
+theme = "minimo"
 
-paginate = 3 # for list of categories
+[permalinks]
+blog  = "/blog/:year/:month/:title/"
+page  = "/:slug/"
 
-summaryLength = 30 # length of summary in the index
-enableEmoji = true # enables https://www.webpagefx.com/tools/emoji-cheat-sheet/
-pygmentsCodeFences = true # enable syntax highlighting
+[taxonomies]
+tags = "tags"
 
-menu = "main"
-meta = "false"
+[[menu.main]]
+weight = 1
+name = "Posts"
+url = "/posts/"
 
-disqusShortname = "blognafiux"
+# Minimo theme configuration
 
-[author]
-    name = "Ignacio Ocampo"
-    github = "iocampomx"
-    gitlab = ""
-    linkedin = "iocampomx"
-    #facebook = "nafiux"
-    twitter = "iocampomx"
-    instagram = "iocampomx"
-    stackoverflow = "770615"
-    docker = "nafiux"
+paginate = 5
+enableRobotsTXT = true # generate robots.txt
+enableEmoji = true
 
-[params]
-    tagline = "Software Engineering / Cloud / Microservices"
+[params.info]
+description = "Engineering Manager / Solutions Architect"
+
+[params.sidebar]
+enable = true
+
+[params.widgets]
+header = ["breadcrumbs"]
+homepage = ["recent_posts"]
+sidebar = ["about","sidebar_menu","taxonomy_cloud"] # search
+footer = ["social_menu"]
+
+[params.social]
+email = "nafiux@gmail.com"
+github = "iocampomx"
+linkedin = "iocampomx"
+twitter = "iocampomx"
+
+[params.settings]
+accentColor = "#00f"

@@ -1,9 +1,11 @@
 +++
 title = "About"
-date = "2017-04-21"
-showOnFrontpage = "false"
-discus = "false"
+date = "2019-07-28"
 menu = "main"
 +++
 
-Software Engineering Manager at Thermo Fisher Scientific @ Tijuana, Baja California. México.
+**Software Engineering Manager** @ Thermo Fisher Scientific.
+
+Tijuana, Baja California. México.
+
+More about me in [linkedin](https://linkedin.com/in/iocampomx).
